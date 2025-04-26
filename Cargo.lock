@@ -128,6 +128,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "ab-example-contract-nft"
+version = "0.0.1"
+dependencies = [
+ "ab-contracts-common",
+ "ab-contracts-io-type",
+ "ab-contracts-macros",
+ "ab-contracts-standards",
+ "ab-contracts-test-utils",
+ "ab-executor-native",
+ "ab-system-contract-code",
+]
+
+[[package]]
 name = "ab-example-contract-wallet"
 version = "0.0.1"
 dependencies = [
