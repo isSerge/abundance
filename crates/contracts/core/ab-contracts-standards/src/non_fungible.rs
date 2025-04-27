@@ -2,7 +2,7 @@ use ab_contracts_common::env::Env;
 use ab_contracts_common::{Address, ContractError};
 use ab_contracts_io_type::bool::Bool;
 use ab_contracts_macros::contract;
-use ab_contracts_io_type::variable_elements::VariableElements;
+// use ab_contracts_io_type::variable_elements::VariableElements;
 // use ab_contracts_io_type::fixed_capacity_string::{FixedCapacityStringU8, FixedCapacityStringU16};
 
 // TODO: consider making these constants configurable
@@ -61,7 +61,6 @@ pub trait NonFungible {
     fn balance_of(
         #[env] env: &Env<'_>,
         #[input] address: &Address,
-        #[output] token_ids: &mut VariableElements<TokenId>,
     ) -> Result<(), ContractError>;
 
     /// Get the owner of a token.
