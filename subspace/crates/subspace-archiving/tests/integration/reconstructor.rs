@@ -4,8 +4,8 @@ use rand_core::{RngCore, SeedableRng};
 use std::assert_matches::assert_matches;
 use std::iter;
 use subspace_archiving::archiver::Archiver;
+use subspace_archiving::objects::BlockObjectMapping;
 use subspace_archiving::reconstructor::{Reconstructor, ReconstructorError};
-use subspace_core_primitives::objects::BlockObjectMapping;
 use subspace_core_primitives::pieces::{FlatPieces, Piece};
 use subspace_core_primitives::segments::{
     ArchivedBlockProgress, ArchivedHistorySegment, LastArchivedBlock, RecordedHistorySegment,
@@ -148,7 +148,7 @@ fn basic() {
             contents.segment_header.unwrap().last_archived_block(),
             LastArchivedBlock {
                 number: 3,
-                archived_progress: ArchivedBlockProgress::Partial(33554322)
+                archived_progress: ArchivedBlockProgress::Partial(33554318)
             }
         );
 
@@ -168,7 +168,7 @@ fn basic() {
             contents.segment_header.unwrap().last_archived_block(),
             LastArchivedBlock {
                 number: 3,
-                archived_progress: ArchivedBlockProgress::Partial(33554322)
+                archived_progress: ArchivedBlockProgress::Partial(33554318)
             }
         );
     }
@@ -189,7 +189,7 @@ fn basic() {
             contents.segment_header.unwrap().last_archived_block(),
             LastArchivedBlock {
                 number: 3,
-                archived_progress: ArchivedBlockProgress::Partial(167771961)
+                archived_progress: ArchivedBlockProgress::Partial(167771953)
             }
         );
     }
@@ -211,7 +211,7 @@ fn basic() {
             contents.segment_header.unwrap().last_archived_block(),
             LastArchivedBlock {
                 number: 3,
-                archived_progress: ArchivedBlockProgress::Partial(167771961)
+                archived_progress: ArchivedBlockProgress::Partial(167771953)
             }
         );
     }
@@ -232,7 +232,7 @@ fn basic() {
             contents.segment_header.unwrap().last_archived_block(),
             LastArchivedBlock {
                 number: 3,
-                archived_progress: ArchivedBlockProgress::Partial(301989600)
+                archived_progress: ArchivedBlockProgress::Partial(301989588)
             }
         );
     }
@@ -254,7 +254,7 @@ fn basic() {
             contents.segment_header.unwrap().last_archived_block(),
             LastArchivedBlock {
                 number: 3,
-                archived_progress: ArchivedBlockProgress::Partial(301989600)
+                archived_progress: ArchivedBlockProgress::Partial(301989588)
             }
         );
     }

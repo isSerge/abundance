@@ -13,18 +13,15 @@ use sc_network::{NetworkBlock, PeerId};
 use sc_network_sync::SyncingService;
 use sc_network_sync::service::network::NetworkServiceHandle;
 use sc_subspace_sync_common::snap_sync_engine::SnapSyncingEngine;
-use sp_api::ProvideRuntimeApi;
 use sp_blockchain::HeaderBackend;
 use sp_consensus::BlockOrigin;
-use sp_consensus_subspace::SubspaceApi;
-use sp_objects::ObjectsApi;
 use sp_runtime::traits::{Block as BlockT, Header};
 use std::collections::{HashSet, VecDeque};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use subspace_archiving::reconstructor::Reconstructor;
-use subspace_core_primitives::BlockNumber;
+use subspace_core_primitives::block::BlockNumber;
 use subspace_core_primitives::segments::SegmentIndex;
 use subspace_data_retrieval::segment_downloading::download_segment_pieces;
 use subspace_networking::Node;
@@ -78,14 +75,12 @@ where
     Block: BlockT,
     AS: AuxStore,
     Client: HeaderBackend<Block>
-        + ProvideRuntimeApi<Block>
         + ProofProvider<Block>
         + BlockImport<Block>
         + BlockchainEvents<Block>
         + Send
         + Sync
         + 'static,
-    Client::Api: SubspaceApi<Block> + ObjectsApi<Block>,
     PG: PieceGetter,
 {
     let info = client.info();
@@ -255,14 +250,12 @@ where
     AS: AuxStore,
     Block: BlockT,
     Client: HeaderBackend<Block>
-        + ProvideRuntimeApi<Block>
         + ProofProvider<Block>
         + BlockImport<Block>
         + BlockchainEvents<Block>
         + Send
         + Sync
         + 'static,
-    Client::Api: SubspaceApi<Block> + ObjectsApi<Block>,
     IQS: ImportQueueService<Block> + ?Sized,
 {
     debug!("Starting snap sync...");
@@ -367,7 +360,7 @@ where
 
     // Wait for blocks to be imported
     // TODO: Replace this hack with actual watching of block import
-    wait_for_block_import(client.as_ref(), last_block_number.into()).await;
+    wait_for_block_import(client.as_ref(), last_block_number).await;
 
     debug!(info = ?client.info(), "Snap sync finished successfully");
 

@@ -28,7 +28,6 @@ use sp_blockchain::HeaderBackend;
 use sp_consensus::SyncOracle;
 use sp_consensus_subspace::{ChainConstants, SubspaceApi};
 use sp_core::H256;
-use sp_objects::ObjectsApi;
 use sp_runtime::traits::Block as BlockT;
 use std::collections::HashMap;
 use std::collections::hash_map::Entry;
@@ -37,7 +36,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Weak};
 use std::time::Duration;
 use subspace_archiving::archiver::NewArchivedSegment;
-use subspace_core_primitives::BlockHash;
+use subspace_core_primitives::block::BlockHash;
 use subspace_core_primitives::pieces::{Piece, PieceIndex};
 use subspace_core_primitives::pot::SlotNumber;
 use subspace_core_primitives::segments::{HistorySize, SegmentHeader, SegmentIndex};
@@ -288,13 +287,7 @@ where
 impl<Block, Client, SO, AS> SubspaceRpcApiServer for SubspaceRpc<Block, Client, SO, AS>
 where
     Block: BlockT,
-    Client: ProvideRuntimeApi<Block>
-        + HeaderBackend<Block>
-        + BlockBackend<Block>
-        + Send
-        + Sync
-        + 'static,
-    Client::Api: ObjectsApi<Block>,
+    Client: HeaderBackend<Block> + BlockBackend<Block> + Send + Sync + 'static,
     SO: SyncOracle + Send + Sync + Clone + 'static,
     AS: AuxStore + Send + Sync + 'static,
 {

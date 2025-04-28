@@ -24,7 +24,6 @@ use crate::sync_from_dsn::snap_sync::snap_sync;
 use crate::task_spawner::SpawnTasksParams;
 use ab_erasure_coding::ErasureCoding;
 use async_lock::Semaphore;
-use core::sync::atomic::{AtomicU32, Ordering};
 use frame_system_rpc_runtime_api::AccountNonceApi;
 use futures::channel::oneshot;
 use jsonrpsee::RpcModule;
@@ -69,12 +68,12 @@ use sp_blockchain::HeaderMetadata;
 use sp_consensus::block_validation::DefaultBlockAnnounceValidator;
 use sp_consensus_subspace::SubspaceApi;
 use sp_core::traits::SpawnEssentialNamed;
-use sp_objects::ObjectsApi;
 use sp_offchain::OffchainWorkerApi;
 use sp_runtime::traits::{Block as BlockT, BlockIdTo};
 use sp_transaction_pool::runtime_api::TaggedTransactionQueue;
 use static_assertions::const_assert;
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::Duration;
 use subspace_core_primitives::pot::PotSeed;
 use subspace_networking::libp2p::multiaddr::Protocol;
@@ -189,13 +188,13 @@ where
     /// Subspace block import
     pub block_import: BoxBlockImport<Block>,
     /// Subspace link
-    pub subspace_link: SubspaceLink<Block>,
+    pub subspace_link: SubspaceLink,
     /// Segment headers store
     pub segment_headers_store: SegmentHeadersStore<FullClient<RuntimeApi>>,
     /// Proof of time verifier
     pub pot_verifier: PotVerifier,
     /// Approximate target block number for syncing purposes
-    pub sync_target_block_number: Arc<AtomicU32>,
+    pub sync_target_block_number: Arc<AtomicU64>,
 }
 
 type PartialComponents<RuntimeApi> = sc_service::PartialComponents<
@@ -225,8 +224,7 @@ where
         + BlockBuilder<Block>
         + OffchainWorkerApi<Block>
         + TaggedTransactionQueue<Block>
-        + SubspaceApi<Block>
-        + ObjectsApi<Block>,
+        + SubspaceApi<Block>,
 {
     let executor = sc_service::new_wasm_executor(&config.executor);
 
@@ -308,7 +306,7 @@ where
         pot_verifier.clone(),
     );
 
-    let sync_target_block_number = Arc::new(AtomicU32::new(0));
+    let sync_target_block_number = Arc::new(AtomicU64::new(0));
     let transaction_pool = Arc::from(
         sc_transaction_pool::Builder::new(
             task_manager.spawn_essential_handle(),
@@ -389,8 +387,7 @@ where
     /// Block signing stream.
     pub reward_signing_notification_stream: SubspaceNotificationStream<RewardSigningNotification>,
     /// Stream of notifications about blocks about to be imported.
-    pub block_importing_notification_stream:
-        SubspaceNotificationStream<BlockImportingNotification<Block>>,
+    pub block_importing_notification_stream: SubspaceNotificationStream<BlockImportingNotification>,
     /// Archived segment stream.
     pub archived_segment_notification_stream:
         SubspaceNotificationStream<ArchivedSegmentNotification>,
@@ -420,8 +417,7 @@ where
         + OffchainWorkerApi<Block>
         + TaggedTransactionQueue<Block>
         + TransactionPaymentApi<Block, Balance>
-        + SubspaceApi<Block>
-        + ObjectsApi<Block>,
+        + SubspaceApi<Block>,
 {
     let PartialComponents {
         client,
