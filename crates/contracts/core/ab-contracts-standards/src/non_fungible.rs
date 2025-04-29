@@ -28,9 +28,9 @@ pub trait NonFungible {
     #[update]
     fn transfer_from(
         #[env] env: &mut Env<'_>,
+        #[input] token_id: &u64,
         #[input] from: &Address,
         #[input] to: &Address,
-        #[input] token_id: &u64,
     ) -> Result<(), ContractError>;
 
     // --- Approval methods ---

@@ -20,20 +20,6 @@ pub struct ExampleNft {
     // TODO: add name and symbol
 }
 
-// fn str_to_fixed_string<const CAP: usize>(
-//     s: &str,
-// ) -> Result<FixedCapacityStringU16<CAP>, ContractError> {
-//     let bytes = s.as_bytes();
-//     let mut fixed_string = FixedCapacityStringU16::<CAP>::default();
-//     let inner_bytes = fixed_string.deref_mut();
-
-//     if inner_bytes.copy_from(bytes) {
-//         Ok(fixed_string)
-//     } else {
-//         Err(ContractError::BadInput)
-//     }
-// }
-
 /// --- Slot data ---
 #[derive(Debug, Default, Copy, Clone, TrivialType)]
 #[repr(C)]
@@ -49,16 +35,18 @@ impl NonFungible for ExampleNft {
     #[update]
     fn transfer_from(
         #[env] env: &mut Env<'_>,
+        #[input] token_id: &TokenId,
         #[input] from: &Address,
         #[input] to: &Address,
-        #[input] token_id: &TokenId,
     ) -> Result<(), ContractError> {
+        // TODO: check for ownership and approval
+
         env.example_nft_transfer_from(
             MethodContext::Replace,
             env.own_address(),
+            token_id,
             from,
             to,
-            token_id,
         )
     }
 
@@ -73,8 +61,8 @@ impl NonFungible for ExampleNft {
             MethodContext::Replace,
             env.own_address(),
             &env.caller(),
-            approved_addr,
             token_id,
+            approved_addr,
         )
     }
 
@@ -94,12 +82,8 @@ impl NonFungible for ExampleNft {
 
     /// --- Query methods ---
     #[view]
-    fn balance_of(
-        #[env] env: &Env<'_>,
-        #[input] address: &Address,
-        // #[output] token_ids: &mut VariableElements<TokenId>,
-    ) -> Result<(), ContractError> {
-        env.example_nft_balance_of(env.own_address())
+    fn balance_of(#[env] env: &Env<'_>, #[input] address: &Address) -> Result<(), ContractError> {
+        env.example_nft_balance_of(env.own_address(), *address)
     }
 
     #[view]
@@ -107,7 +91,7 @@ impl NonFungible for ExampleNft {
         #[env] env: &Env<'_>,
         #[input] token_id: &TokenId,
     ) -> Result<Address, ContractError> {
-        env.example_nft_owner_of(env.own_address(), &env.own_address(), token_id)
+        env.example_nft_owner_of(env.own_address(), token_id)
     }
 
     #[view]
@@ -115,7 +99,7 @@ impl NonFungible for ExampleNft {
         #[env] env: &Env<'_>,
         #[input] token_id: &TokenId,
     ) -> Result<Address, ContractError> {
-        env.example_nft_get_approved(env.own_address(), &env.own_address(), token_id)
+        env.example_nft_get_approved(env.own_address(), token_id)
     }
 
     #[view]
@@ -165,62 +149,16 @@ impl ExampleNft {
     #[update]
     pub fn transfer_from(
         #[env] env: &mut Env<'_>,
-        #[slot] from: &mut MaybeData<OwnershipSlot>,
-        #[slot] to: &mut MaybeData<OwnershipSlot>,
-        #[input] token_id: &TokenId, // do we need this?
+        #[slot] token_slot: &MaybeData<OwnershipSlot>,
+        #[input] from: &Address,
+        #[input] to: &Address,
     ) -> Result<(), ContractError> {
-        // Check if the token exists
-        if to.get().is_none() {
-            return Err(ContractError::NotFound);
-        }
-
-        // Check if the caller is the owner of the token or the approved address
-        let is_owner = env.caller() == from.get().map_or(Address::default(), |slot| slot.owner);
-        let is_approved =
-            from.get().map_or(Address::default(), |slot| slot.approved) == env.caller();
-
-        if !(is_owner || is_approved) {
-            return Err(ContractError::Forbidden);
-        }
-
-        let from_slot = from.get_mut_or_default();
-        let to_slot = to.get_mut_or_default();
-
-        // Transfer the token
-        from_slot.owner = Address::default();
-        to_slot.owner = env.own_address();
-
-        // Reset the approved address
-        from_slot.approved = Address::default();
-        to_slot.approved = Address::default();
-
-        Ok(())
+        unimplemented!();
     }
 
     #[update]
-    pub fn approve(
-        #[env] env: &mut Env<'_>,
-        #[slot] (from_addr, from): (&Address, &mut MaybeData<OwnershipSlot>),
-        #[input] approved_addr: &Address,
-        #[input] token_id: &TokenId, // do we need this?
-    ) -> Result<(), ContractError> {
-        // Check if the token exists
-        let exists = env.example_nft_exists(env.context(), from_addr)?;
-        // is this the right way?
-        if exists != Bool::from(true) {
-            return Err(ContractError::NotFound);
-        }
-
-        // Check if the caller is the owner of the token
-        let is_owner = env.caller() == from.get().map_or(Address::default(), |slot| slot.owner);
-        if !is_owner {
-            return Err(ContractError::Forbidden);
-        }
-
-        let from_slot = from.get_mut_or_default();
-        from_slot.approved = *approved_addr;
-
-        Ok(())
+    pub fn approve(#[env] env: &mut Env<'_>) -> Result<(), ContractError> {
+        unimplemented!();
     }
 
     #[update]
@@ -249,14 +187,13 @@ impl ExampleNft {
     pub fn exists(
         #[slot] ownership_slot: &MaybeData<OwnershipSlot>,
     ) -> Result<Bool, ContractError> {
-        Ok(Bool::from(ownership_slot.get().is_none()))
+        let item = ownership_slot.get();
+        Ok(Bool::new(item.is_some()))
     }
 
     #[view]
     pub fn owner_of(
-        #[env] env: &Env<'_>,
         #[slot] ownership_slot: &MaybeData<OwnershipSlot>,
-        #[input] token_id: &TokenId,
     ) -> Result<Address, ContractError> {
         ownership_slot
             .get()
@@ -266,9 +203,7 @@ impl ExampleNft {
 
     #[view]
     pub fn get_approved(
-        #[env] env: &Env<'_>,
         #[slot] ownership_slot: &MaybeData<OwnershipSlot>,
-        #[input] token_id: &TokenId,
     ) -> Result<Address, ContractError> {
         ownership_slot
             .get()
